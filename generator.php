@@ -31,11 +31,22 @@ require 'includes/navlink.inludes.php';
         </div>
     <?php endif; ?>
 
-  <div class="modal-fade" id="qrForm" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="qrCodeModalLabel">Generate QR Code</h5>
+    <!-- Button trigger modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#qrFormModalLong">
+    Generte Qr-Code
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="qrFormModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
         <form id="generateForm">
             <div class="form-group">
                 <input type="text" name="fName" id="fName" placeholder="Enter First Name" class="form-control" required>
@@ -69,12 +80,14 @@ require 'includes/navlink.inludes.php';
             <div class="form-group">
                     <input type="checkbox" id="orcr" name="hasORCR" value="1" > &nbsp Has ORCR
             </div>
-            <button type="submit" class="btn btn-primary">Generate</button>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">Generate</button>
+            </div>
+
         </form>
-        </div>
-        </div>
-</div>
-</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 
@@ -126,8 +139,8 @@ console.log("Contact Number:", contactNumber);
         </thead>
         <tbody>
         <?php
-          require_once 'Classes/Dbh.php';
 
+          require_once 'Classes/Dbh.php';
 
           try {
             $db = new Dbh();
@@ -138,33 +151,28 @@ console.log("Contact Number:", contactNumber);
 
           if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
-            $fName = $_POST['fName'];
+            $lName = $_POST['lName'];
+            $mi= $_POST['mi'];
+            $plateNumber= $_POST['plateNumber'];
+            $vehicleType= $_POST['vehicleType'];
+            $address= $_POST['address'];
+            $contactNumber= $_POST['contactNumber'];
+            $orcr= $_POST['orcr'];
           }
-
-
                    $counter=1;
-            $conn = new mysqli($server, $username, $password, $database);
-                 if ($conn->connect_error) {
-            die("Connection Failed" . $conn->error);
-            }
+            // $conn = new mysqli($server, $username, $password, $database);
+            //      if ($conn->connect_error) {
+            // die("Connection Failed" . $conn->error);
+            // }
 
             $sql = "SELECT id, fName, lName, mi, plateNumber, vehicleType, address, contactNumber FROM table_scan ORDER BY id DESC";
-            $result = $conn->query($sql);
      
+            $stmt = $conn->query($sql);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-
-            while($row = $result-> fetch_assoc()){
-            
+            foreach ($rows as $row) {
                 ?>
                     <tr>
-      
                         <td><?php  echo $counter;   ?></td>
                         <td><?php echo $row['fName']; ?></td>
                         <td><?php echo $row['lName']; ?></td>
@@ -174,22 +182,14 @@ console.log("Contact Number:", contactNumber);
                         <td><?php echo $row['address']; ?></td>
                         <td><?php echo $row['contactNumber']; ?></td>
                     </tr>
-                
                 <?php
                 $counter++;
                 }
-            
             ?>
-
-            
-
         </tbody>
     </table>
-
 </div>
 </div>
-
-
 
 <script src="qrcode.js"></script>
 <script>
@@ -209,7 +209,7 @@ document.getElementById('generateForm').addEventListener('submit', function(even
       
         let qrData = JSON.stringify({ fName:fName, lName:lName, mi:mi, plateNumber: plateNumber, type: type, address:address, contactNumber:contactNumber });
 
-      
+        // how to change this as id instead of making the qrcode as the whole name XD and the logic relies on id and query
         let qrCanvas = document.getElementById('qrCanvas');
         qrCanvas.innerHTML = ""; //cleared first to put new data
         let qrCode = new QRCode(qrCanvas, { //qrCanavas as holder of the code
