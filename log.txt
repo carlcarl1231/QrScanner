@@ -1,0 +1,10 @@
+Array
+(
+    [fName] => asd
+    [lName] => asd
+    [mi] => asdd
+    [plateNumber] => asd
+    [type] => Car
+    [address] => asd
+    [contactNumber] => 11111232323
+)
