@@ -203,53 +203,75 @@ document.getElementById('generateForm').addEventListener('submit', function(even
     let type = document.getElementById('vehicleType').value;
     let address = document.getElementById('address').value;
     let contactNumber = document.getElementById('contactNumber').value;
-    let orcr = document.getElementById('orcr').checked ? 1:0;
+    let orcr = document.getElementById('orcr').checked ? 1 : 0;
 
-    if (fName && lName && mi && plateNumber && type && address && contactNumber ) {
-      
-        let qrData = JSON.stringify({ fName:fName, lName:lName, mi:mi, plateNumber: plateNumber, type: type, address:address, contactNumber:contactNumber });
-
-        // how to change this as id instead of making the qrcode as the whole name XD and the logic relies on id and query
-        let qrCanvas = document.getElementById('qrCanvas');
-        qrCanvas.innerHTML = ""; //cleared first to put new data
-        let qrCode = new QRCode(qrCanvas, { //qrCanavas as holder of the code
-            text: qrData,
-            width: 128,
-            height: 128
-        });
-
-   function saveqr() {
-        setTimeout(function() {
-            let canvas = qrCanvas.querySelector('canvas');
-            let imageData = canvas.toDataURL("image/png"); 
-                let qrImage = document.getElementById('qrImage');
-                qrImage.src = imageData;
-                qrImage.innerHTML = ''; 
-                qrImage.style.display = 'block'; 
-                document.getElementById('downloadLink').href = imageData; 
-        },1000);    
-    }
-
-        saveqr();
-        $('#qrCodeModal').modal('show');
+    if (fName && lName && mi && plateNumber && type && address && contactNumber) {
 
         $.ajax({
             url: 'save_qr_data.php',
             type: 'POST',
-            data: { fName:fName, lName:lName, mi:mi, plateNumber: plateNumber, type: type, address:address, contactNumber:contactNumber, orcr:orcr},
+            dataType: 'json', // important — tells jQuery to parse JSON
+            data: { 
+                fName: fName, 
+                lName: lName, 
+                mi: mi, 
+                plateNumber: plateNumber, 
+                type: type, 
+                address: address, 
+                contactNumber: contactNumber, 
+                orcr: orcr
+            },
             success: function(response) {
-                console.log('Data saved successfully');
-           
+                if (response.id) {
+                    console.log('Data saved successfully. ID:', response.id);
+                    
+                    // You can hash the ID later if you want more privacy
+                    let qrData = "USER-" + response.id;
+
+                    // Generate and show QR code
+                    generateCode(qrData);
+                    saveqr();
+                    $('#qrCodeModal').modal('show');
+                } else if (response.error) {
+                    alert('Error: ' + response.error);
+                } else {
+                    alert('Unexpected response: ' + JSON.stringify(response));
+                }
             },
             error: function(error) {
                 alert('Failed to save data. Please try again.');
+                console.error(error);
             }
         });
+
     } else {
         alert('Please fill all fields');
     }
 });
 
+function generateCode(qrData) {
+    let qrCanvas = document.getElementById('qrCanvas');
+    qrCanvas.innerHTML = ""; // clear old QR if any
+    new QRCode(qrCanvas, {
+        text: qrData,
+        width: 128,
+        height: 128
+    });
+}
+
+function saveqr() {
+    setTimeout(function() {
+        let qrCanvas = document.getElementById('qrCanvas');
+        let canvas = qrCanvas.querySelector('canvas');
+        if (!canvas) return; // safety check
+
+        let imageData = canvas.toDataURL("image/png");
+        let qrImage = document.getElementById('qrImage');
+        qrImage.src = imageData;
+        qrImage.style.display = 'block';
+        document.getElementById('downloadLink').href = imageData;
+    }, 1000);
+}
 </script>
 
 </body>
