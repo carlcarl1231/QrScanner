@@ -21,9 +21,7 @@ try {
 
     $id = $conn->lastInsertId();
 
-    $hash = hash('sha256', $id);
-
-    echo json_encode(['id' => $hash]);
+    echo json_encode(['id' => $id]);
 } catch (PDOException $e) {
     echo json_encode(['error' => $e->getMessage()]);
 }

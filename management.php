@@ -50,13 +50,75 @@ if (isset($_SESSION['success'])) {
                 window.location.href = 'delete_and_redirect.php?id=' + id;
             }
         }
+
+ async function generateCode(qrData) {
+  const encoder = new TextEncoder();
+    const data = encoder.encode(qrData);
+
+    // Hash it using SHA-256
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Shorten it (like substr in PHP)
+    const shortHash = hashHex.substring(0, 10);
+        let qrCanvas = document.getElementById('qrCanvas');
+        qrCanvas.innerHTML = ""; // clear old QR if any
+        new QRCode(qrCanvas, {
+            text: shortHash,
+            width: 128,
+            height: 128
+        });
+
+        saveqr();
+        $('#qrCodeModal').modal('show');
+    }
+
+
+function saveqr() {
+    setTimeout(function() {
+        let qrCanvas = document.getElementById('qrCanvas');
+        let canvas = qrCanvas.querySelector('canvas');
+        if (!canvas) return; // safety check
+
+        let imageData = canvas.toDataURL("image/png");
+        let qrImage = document.getElementById('qrImage');
+        qrImage.src = imageData;
+        qrImage.style.display = 'block';
+        document.getElementById('downloadLink').href = imageData;
+    }, 1000);
+}
+
     </script>
 </head>
 <body>
 
 <?php
 require 'includes/navlink.inludes.php';
+require 'Classes/Generator.php';
 ?>
+
+<div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="qrCodeModalLabel">Generated QR Code</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <canvas id="qrCanvas"></canvas> 
+                <img id="qrImage" style="display: none; max-width: 100%;" />
+                <br><a id="downloadLink" href="#" download="qrcode.png">Download QR Code</a>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="container mt-2">
     <div class="row">
@@ -100,7 +162,7 @@ require 'includes/navlink.inludes.php';
                     echo "<td>" . htmlspecialchars($row['vehicleType']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['contactNumber']) . "</td>";
-                    echo '<td><button onclick="confirmDelete(' . $row['id'] . ')" class="btn btn-warning">Update</button></td>';
+                    echo '<td><button onclick="confirmDelete(' . $row['id'] . ')" class="btn btn-warning">Update</button>&nbsp<button onclick="generateCode(' . $row['id'] . ')" class="btn btn-warning">Re-Generate Code</button> </td>';
                     echo "</tr>";
                 }
             } else {

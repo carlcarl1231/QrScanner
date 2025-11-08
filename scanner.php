@@ -16,16 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['text'])) {
     $text = $_POST['text'];
     $date = date('Y-m-d');
     $time = date('H:i');
-
     
     $data = json_decode($text, true);
    
-
-    if ($data === null || !isset($data['fName']) || !isset($data['lName']) || !isset($data['mi']) || !isset($data['plateNumber']) || !isset($data['type']) || !isset($data['address']) || !isset($data['contactNumber'])) {
-        $_SESSION['error'] = "Invalid QR code data.";
-        die($_SESSION['error']);
-       
-    }
+// if ($data === null || !isset($data['fName']) || !isset($data['lName']) || !isset($data['mi']) || !isset($data['plateNumber']) || !isset($data['type']) || !isset($data['address']) || !isset($data['contactNumber'])) { $_SESSION['error'] = "Invalid QR code data."; //     die($_SESSION['error']); // }
 
     $fName = $conn->real_escape_string($data['fName']);
     $lName = $conn->real_escape_string($data['lName']);

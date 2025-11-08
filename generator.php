@@ -221,14 +221,18 @@ document.getElementById('generateForm').addEventListener('submit', function(even
                 contactNumber: contactNumber, 
                 orcr: orcr
             },
-            success: function(response) {
-                if (response.id) {
+            success: async function(response) {
+                  if (response.id) {
                     console.log('Data saved successfully. ID:', response.id);
                     
-                    // You can hash the ID later if you want more privacy
-                    let qrData = "USER-" + response.id;
+                    const encoder = new TextEncoder();
+                    const data = encoder.encode(response.id.toString());
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    const shortHash = hashHex.substring(0, 10); 
 
-                    // Generate and show QR code
+                    let qrData = shortHash;
                     generateCode(qrData);
                     saveqr();
                     $('#qrCodeModal').modal('show');
