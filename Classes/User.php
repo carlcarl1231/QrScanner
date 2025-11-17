@@ -19,7 +19,6 @@ class User extends Dbh {
         return $this->connect()->lastInsertId();
     }
 
-
     public function getUser($id) {
         $sql = "SELECT * FROM user_table where id = ?";
         $stmt = $this->db->prepare($sql);
