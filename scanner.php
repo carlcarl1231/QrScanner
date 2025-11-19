@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['text'])) {
 
     try {
         $stmt = $conn->prepare("SELECT ID FROM table_scan WHERE ID = ? ");
-        $stmt->execute($data);
+        $stmt->execute($IDIndex);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if(!$user) {
@@ -201,7 +201,7 @@ require 'includes/navlink.inludes.php';
                 }
 
                    $counter =1;
-                   $result = $conn->query("
+                  $sql ="
                    SELECT 
                        table_scan2.id2, 
                        table_scan.fName, 
@@ -220,9 +220,13 @@ require 'includes/navlink.inludes.php';
                    ON 
                        table_scan2.IDIndex = table_scan.ID 
                    ORDER BY id2 DESC
-               ");
-                if ($result && $result->num_rows > 0) {
-                        while($row = $result->fetch_assoc()) {
+               ";
+               $stmt = $conn->prepare($sql);
+               $stmt->execute();  
+
+               $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) {
+                        foreach($row as $row) {
                             echo "<tr>";
                             echo "<td>" . $counter . "</td>";
                             echo "<td>" . $row['fName'] . "</td>";
