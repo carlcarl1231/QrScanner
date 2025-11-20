@@ -11,7 +11,7 @@ class User extends Dbh {
     }
 
     public function addUser($userName, $userPass) {
-        $sql = "INSERT INTO user_table(userName, userPass)
+        $sql = "INSERT INTO user_tb(userName, userPass)
                 VALUES (?,?)";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$userName, $userPass]);
@@ -20,7 +20,7 @@ class User extends Dbh {
     }
 
     public function getUser($id) {
-        $sql = "SELECT * FROM user_table where id = ?";
+        $sql = "SELECT * FROM user_tb where id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id]);
 
@@ -28,7 +28,7 @@ class User extends Dbh {
     }
 
     public function deleteUser($id) {
-        $sql = "DELETE FROM user_table WHERE id = ?";
+        $sql = "DELETE FROM user_tb WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$id]);
     }

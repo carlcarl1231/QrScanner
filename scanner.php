@@ -1,97 +1,124 @@
 <?php
 
-$server = "localhost";
-$username = "root";
-$password = "";
-$dbname = "scandb";
+require_once 'Classes/Dbh.php';
 
-$conn = new mysqli($server, $username, $password, $dbname);
-
-if ($conn->connect_error) {
-    die("Connection Failed: " . $conn->connect_error);
+try {
+    $db = new Dbh();
+    $conn = $db->connect();
+    
+} catch (PDOException $e) {
+    die('Connection Faile' . $e->getMessage());
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['text'])) {
     date_default_timezone_set('Asia/Manila');
-    $text = $_POST['text'];
+    $text = $_POST['text']; 
     $date = date('Y-m-d');
     $time = date('H:i');
     
-    $data = json_decode($text, true);
+    $decodedTextId = base64_decode($text);
+
+    $data = json_decode($decodedTextId, true);//revert to base64 main
    
-// if ($data === null || !isset($data['fName']) || !isset($data['lName']) || !isset($data['mi']) || !isset($data['plateNumber']) || !isset($data['type']) || !isset($data['address']) || !isset($data['contactNumber'])) { $_SESSION['error'] = "Invalid QR code data."; //     die($_SESSION['error']); // }
-
-    $fName = $conn->real_escape_string($data['fName']);
-    $lName = $conn->real_escape_string($data['lName']);
-    $mi = $conn->real_escape_string($data['mi']);
-    $plateNumber = $conn->real_escape_string($data['plateNumber']);
-    $vehicleType = $conn->real_escape_string($data['type']);
-
-
-    $stmt = $conn->prepare("SELECT ID FROM table_scan WHERE fName = ? AND lName = ? AND mi = ? AND plateNumber = ? AND vehicleType = ? AND address = ? AND contactNumber = ?");
-    if (!$stmt) {
-        die("Prepare failed: " . $conn->error);
+    if (!$data || !isset($data['ID'])) {
+        $_SESSION['error'] = "Invalid QR code data.";
+        header("Location: scanner.php");
+        exit();
     }
-    $stmt->bind_param('sssssss', $fName, $lName, $mi, $plateNumber, $vehicleType, $data['address'], $data['contactNumber']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    $IDIndex = isset($row['ID']) ? $row['ID'] : null;
-    $stmt->close();
 
-    if ($IDIndex) {
-      
-        $stmt = $conn->prepare("SELECT * FROM table_scan2 WHERE IDIndex = ? AND logDate = ? AND status = '0'");
-        if (!$stmt) {
-            die("Prepare failed: " . $conn->error);
+    $IDIndex = $data['ID'];
+
+    try {
+        $stmt = $conn->prepare("SELECT ID FROM table_scan WHERE ID = ? ");
+        $stmt->execute($IDIndex);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if(!$user) {
+            $_SESSION['error'] ="No matching record found.";
+            header("Location: scanner.php");
+            exit();
         }
-        $stmt->bind_param('is', $IDIndex, $date);
-        $stmt->execute();
-        $query = $stmt->get_result();
 
-        if ($query->num_rows > 0) {
-            $stmt = $conn->prepare("UPDATE table_scan2 SET timeOut = ?, status = '1' WHERE IDIndex = ? AND logDate = ? AND status = '0'");
-            if (!$stmt) {
-                die("Prepare failed: " . $conn->error);
-            }
-            $stmt->bind_param('sis', $time, $IDIndex, $date);
-            if ($stmt->execute()) {
-                $_SESSION['success'] = 'Logged Out Successfully';
-            } else {
-                $_SESSION['error'] = "Error updating record: " . $stmt->error;
-                die($_SESSION['error']); 
-            }
-            $stmt->close();
 
-        } else {
+        $stmt = $conn->prepare("SELECT * FROM table_scan2 WHERE IDIndex = :id AND logDate = :logDate AND status = '0'");
+        $stmt->execute(['id' => $IDIndex, 'logDate'=> $date]);
+        $record = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            $stmt = $conn->prepare("INSERT INTO table_scan2 (timeIn, logDate, status, IDIndex) VALUES (?, ?, '0', ?)");
-            if (!$stmt) {
-                die("Prepare failed: " . $conn->error);
-            }
-            $stmt->bind_param('ssi', $time, $date, $IDIndex);
-            if ($stmt->execute()) {
-                $_SESSION['success'] = 'Checked In Successfully';
-            } else {
-                $_SESSION['error'] = "Error inserting record: " . $stmt->error;
-                setTimeout(function() {
-                    alert($_SESSION['error']);
-                    header("Location:scanner.php");
-
-                },1000);
-            }
-            $stmt->close();
+        if($record) {
+           $stmt = $conn->prepare("UPDATE table_scan2 SET timeOut = :time, status = '1' WHERE id2 = :id2 ");
+           $stmt->execute(['timeIn' => $time, 'logDate' => $date, 'id' => $IDIndex]);     
+           $_SESSION['success'] = "Checked In Successfuly.";
         }
-    } else {
-        $_SESSION['error'] = "No matching record found in table_scan.";
-        die($_SESSION['error']); 
+
+     } catch(PDOException $e) {
+        $_SESSION['error'] = "Database error: " . $e->getMessage();
     }
 
     header("Location: scanner.php");
     exit();
-}
 
-$conn->close();
+
+    // $stmt->bind_param('sssssss', $fName, $lName, $mi, $plateNumber, $vehicleType, $data['address'], $data['contactNumber']);
+    // $stmt->execute();
+    // $result = $stmt->get_result();
+    // $row = $result->fetch_assoc();
+    // $IDIndex = isset($row['ID']) ? $row['ID'] : null;
+    // $stmt->close();
+
+//     if ($IDIndex) {
+      
+//         $stmt = $conn->prepare("SELECT * FROM table_scan2 WHERE IDIndex = ? AND logDate = ? AND status = '0'");
+//         if (!$stmt) {
+//             die("Prepare failed: " . $conn->error);
+//         }
+//         $stmt->bind_param('is', $IDIndex, $date);
+//         $stmt->execute();
+//         $query = $stmt->get_result();
+
+//         if ($query->num_rows > 0) {
+//             $stmt = $conn->prepare("UPDATE table_scan2 SET timeOut = ?, status = '1' WHERE IDIndex = ? AND logDate = ? AND status = '0'");
+//             if (!$stmt) {
+//                 die("Prepare failed: " . $conn->error);
+//             }
+//             $stmt->bind_param('sis', $time, $IDIndex, $date);
+//             if ($stmt->execute()) {
+//                 $_SESSION['success'] = 'Logged Out Successfully';
+//             } else {
+//                 $_SESSION['error'] = "Error updating record: " . $stmt->error;
+//                 die($_SESSION['error']); 
+//             }
+//             $stmt->close();
+
+//         } else {
+
+//             $stmt = $conn->prepare("INSERT INTO table_scan2 (timeIn, logDate, status, IDIndex) VALUES (?, ?, '0', ?)");
+//             if (!$stmt) {
+//                 die("Prepare failed: " . $conn->error);
+//             }
+//             $stmt->bind_param('ssi', $time, $date, $IDIndex);
+//             if ($stmt->execute()) {
+//                 $_SESSION['success'] = 'Checked In Successfully';
+//             } else {
+//                 $_SESSION['error'] = "Error inserting record: " . $stmt->error;
+//                 setTimeout(function() {
+//                     alert($_SESSION['error']);
+//                     header("Location:scanner.php");
+
+//                 },1000);
+//             }
+//             $stmt->close();
+//         }
+//     } else {
+//         $_SESSION['error'] = "No matching record found in table_scan.";
+//         die($_SESSION['error']); 
+//     }
+
+//     header("Location: scanner.php");
+//     exit();
+// }
+
+// $conn->close();
+}
 ?>
 
 <!DOCTYPE html>
@@ -165,10 +192,16 @@ require 'includes/navlink.inludes.php';
                 </thead>
                 <tbody>
                     <?php
-                   
-                    $conn = new mysqli($server, $username, $password, $dbname);
+                
+                
+                try {
+                
+                } catch (PDOException $e) {
+                    die('Cant Retrive Data: '. $e->getMessage());
+                }
+
                    $counter =1;
-                   $result = $conn->query("
+                  $sql ="
                    SELECT 
                        table_scan2.id2, 
                        table_scan.fName, 
@@ -187,9 +220,13 @@ require 'includes/navlink.inludes.php';
                    ON 
                        table_scan2.IDIndex = table_scan.ID 
                    ORDER BY id2 DESC
-               ");
-                if ($result && $result->num_rows > 0) {
-                        while($row = $result->fetch_assoc()) {
+               ";
+               $stmt = $conn->prepare($sql);
+               $stmt->execute();  
+
+               $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($rows) {
+                        foreach($row as $row) {
                             echo "<tr>";
                             echo "<td>" . $counter . "</td>";
                             echo "<td>" . $row['fName'] . "</td>";

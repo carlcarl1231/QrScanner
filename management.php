@@ -3,8 +3,8 @@ require_once 'Classes/Dbh.php';
 
 
 try { 
-$db = new Dbh();
-$conn = $db->connect();
+    $db = new Dbh();
+    $conn = $db->connect();
 } catch (PDOException $e) {
     die("Connection Failed:" . $e->getMessage());
 }
@@ -51,21 +51,16 @@ if (isset($_SESSION['success'])) {
             }
         }
 
- async function generateCode(qrData) {
-  const encoder = new TextEncoder();
-    const data = encoder.encode(qrData);
+ function generateCode(qrData) {//need to test wether this matches the generating as this is the re generate area
+             let encodedID = btoa(qrData.toString()) // normal Base64
+                .replace(/\+/g, '-') // make URL-safe
+                .replace(/\//g, '_')
+                .replace(/=+$/, ''); // trim '='
 
-    // Hash it using SHA-256
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    // Shorten it (like substr in PHP)
-    const shortHash = hashHex.substring(0, 10);
         let qrCanvas = document.getElementById('qrCanvas');
         qrCanvas.innerHTML = ""; // clear old QR if any
         new QRCode(qrCanvas, {
-            text: shortHash,
+            text: encodedID,
             width: 128,
             height: 128
         });
