@@ -14,6 +14,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $username = htmlspecialchars($_POST["username"]);
     $password = htmlspecialchars($_POST["password"]);
+    $confirm= htmlspecialchars($_POST["password2"]);
     $status  = $_POST['status'];
     // Create Login object
     $login = new Login($username, $password, $status);
@@ -51,11 +52,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <input type="hidden" name="status" value="admin">
 
                     <label for="username">Username</label>
-                    <input type="text" name="username" id="username" class="form-control" required>
+                    <input type="text" name="username" id="username" placeholder="Username" class="form-control" required>
 
                     <label for="password" class="mt-2">Password</label>
-                    <input type="password" name="password" id="password" class="form-control" required>
+                    <input type="password" name="password" id="password" placeholder="Password" class="form-control" required>
 
+                    <label for="password2" class="mt-2">Repeat Password</label>
+                    <input type="password" name="password2" placeholder="Repeat Password" id="password2" class="form-control" required>
                 </div>
 
                 <div class="modal-footer">
