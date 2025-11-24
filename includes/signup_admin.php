@@ -3,7 +3,7 @@ session_start();
 
 require "helpers.php";
 require '../Classes/Dbh.php';
-require '../Classes/Login.php';
+require '../Classes/Users.php';
 
 $csrf = new CSRF();
 

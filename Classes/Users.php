@@ -78,7 +78,7 @@ class Login extends Dbh {
     }
 
 }
-public function get_user() {
+public function get_user_all() {
     if ($this->status === 'admin') {
         $query = "SELECT * FROM admin_tb";
         $stmt = $this->connection()->prepare($query);
@@ -97,12 +97,30 @@ public function get_user() {
     }
 }
 
+public function get_user($id) {
+    if ($this->status === "admin") {
+        $query = "SELECT * FROM admin_tb WHERE id = :id LIMIT 1 ";
+
+        $stmt = $this->connection()->prepare($query);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($stmt->execute) {
+            return $row;
+        } else {
+            return ['status' => 'failed'];
+        }
+
+}
+}
+
 public function delete_user($id) {
     if ($this->status === 'admin') {
         $query = "DELETE FROM admin_tb WHERE id = :id LIMIT 1 ";
 
         $stmt = $this->connection()->prepare($query);
-        $stmt->bingParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
         if ($stmt->execute) {
             return ['status' => 'success'];
@@ -113,7 +131,7 @@ public function delete_user($id) {
         $query = "DELETE FROM admin_tb WHERE id = :id LIMIT 1 ";
 
         $stmt = $this->connection()->prepare($query);
-        $stmt->bingParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
 
         if ($stmt->execute) {
             return ['status' => 'success'];
@@ -121,7 +139,6 @@ public function delete_user($id) {
             return ['status' => 'failed'];
         }
     }
-
 }
 
 }
