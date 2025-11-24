@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../vendor/autoload.php';
 use Dotenv\Dotenv;
 
@@ -10,17 +9,13 @@ class Dbh {
     private $dbpassword;
 
     public function __construct() {
-        $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+        $dotenv = Dotenv::createImmutable(dirname(__DIR__)); // scanner/
         $dotenv->load();
 
-
-        var_dump($_ENV['DB_HOST'], $_ENV['DB_NAME'], $_ENV['DB_USER'], $_ENV['DB_PASS']);
-        exit;   
         $this->host = $_ENV['DB_HOST'] ?? 'localhost';
         $this->dbname = $_ENV['DB_NAME'] ?? 'scandb';
         $this->dbusername = $_ENV['DB_USER'] ?? 'root';
         $this->dbpassword = $_ENV['DB_PASS'] ?? '';
-
     }
 
     public function connect() {
@@ -34,7 +29,4 @@ class Dbh {
             die("Connection Failed: " . $e->getMessage());
         }
     }
-
-
-
 }
