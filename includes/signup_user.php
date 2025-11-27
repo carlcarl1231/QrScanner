@@ -68,7 +68,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $loginAlert = "<div class='alert alert-success'>Login successful! Redirecting...</div>";
             echo "<script>
                     setTimeout(function(){
-                        window.location.href = '../dashboard.php';
+                        window.location.href = '../public/dashboard.php';
                     }, 2000);
                   </script>";
         } else {

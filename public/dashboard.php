@@ -20,7 +20,7 @@
     <h1 class="main-header">School Vehicle Monitoring System (SVMS)</h1>
 </div>
 <?php
-    require "includes/navlink.inludes.php";
+    require "../includes/navlink.inludes.php";
 ?>
 
 <div class="main-content">

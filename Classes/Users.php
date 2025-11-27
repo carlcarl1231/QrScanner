@@ -7,7 +7,7 @@ class Login extends Dbh {
     private $status;
 
     public function __construct($username, $password, $status = null) {
-        parent::__construct(); // load DB
+        parent::__construct();
         $this->username = $username;
         $this->password = $password;
         $this->status = $status;
@@ -20,7 +20,7 @@ class Login extends Dbh {
         if ($this->status === 'admin') {
             $query = "INSERT INTO admin_tb (username, password, status) VALUES (:username, :password, :status)";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([
+            return $stmt->execute([
                 ':username' => $this->username,
                 ':password' => $hashedPassword,
                 ':status' => $this->status
@@ -28,117 +28,55 @@ class Login extends Dbh {
         } else {
             $query = "INSERT INTO user_tb (username, password) VALUES (:username, :password)";
             $stmt = $pdo->prepare($query);
-            $stmt->execute([
+            return $stmt->execute([
                 ':username' => $this->username,
                 ':password' => $hashedPassword
             ]);
         }
     }
 
-    public function loginuser() {
-       if ($this->status === 'admin') {
-            $query = "SELECT username AND password FROM admin_tb WHERE username = :username LIMIT 1";
-            $stmt = $this->connection()->prepare($query);
+    public function loginUser() {
+        $pdo = $this->connect();
+
+        $tables = ['admin_tb', 'user_tb'];
+
+        foreach ($tables as $table) {
+            $query = "SELECT username, password FROM $table WHERE username = :username LIMIT 1";
+            $stmt = $pdo->prepare($query);
             $stmt->bindParam(':username', $this->username);
             $stmt->execute();
+        }
 
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($row) {
-                $inputPass = hash('sha256', $this->password);
-
-                if (password_verify($this->password, $row['password'])) {
-                    return [
-                        'status' => 'success', 'username' => $row['username'] ]; }
-            }
-
+            if ($row && password_verify($this->password, $row['password'])) {
+               return ['status' => 'success', 'username' => $row['username']];
+        }
             return ['status' => 'failed'];
-       }else {  
-     
-            $query = "SELECT username AND password FROM user_tb WHERE username = :username LIMIT 1";
-            $stmt = $this->connection()->prepare($query);
-            $stmt->bindParam(':username', $this->username);
-            $stmt->execute();
-
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($row) {
-                $inputPass = hash('sha256', $this->password);
-
-                if (password_verify($this->password, $row['password'])) {
-                    return [
-                        'status' => 'success',
-                        'username' => $row['username']
-                    ];
-                }
-            }
-
-            return ['status' => 'failed'];
-    
     }
 
-}
-public function get_user_all() {
-    if ($this->status === 'admin') {
-        $query = "SELECT * FROM admin_tb";
-        $stmt = $this->connection()->prepare($query);
+    public function getUserAll() {
+        $pdo = $this->connect();
+        $table = ($this->status === 'admin') ? 'admin_tb' : 'user_tb';
+        $stmt = $pdo->prepare("SELECT * FROM $table");
         $stmt->execute();
-
-        $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $row;
-    } else {
-        $query = "SELECT * FROM user_tb";
-        $stmt = $this->connection()->prepare($query);
-        $stmt->execute();
-
-        $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        return $row;
-
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}
 
-public function get_user($id) {
-    if ($this->status === "admin") {
-        $query = "SELECT * FROM admin_tb WHERE id = :id LIMIT 1 ";
-
-        $stmt = $this->connection()->prepare($query);
+    public function getUser($id) {
+        $pdo = $this->connect();
+        $table = ($this->status === 'admin') ? 'admin_tb' : 'user_tb';
+        $stmt = $pdo->prepare("SELECT * FROM $table WHERE id = :id LIMIT 1");
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
+        $stmt->execute();
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if ($stmt->execute) {
-            return $row;
-        } else {
-            return ['status' => 'failed'];
-        }
-
-}
-}
-
-public function delete_user($id) {
-    if ($this->status === 'admin') {
-        $query = "DELETE FROM admin_tb WHERE id = :id LIMIT 1 ";
-
-        $stmt = $this->connection()->prepare($query);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-        if ($stmt->execute) {
-            return ['status' => 'success'];
-        } else {
-            return ['status' => 'failed'];
-        }
-    } else {
-        $query = "DELETE FROM admin_tb WHERE id = :id LIMIT 1 ";
-
-        $stmt = $this->connection()->prepare($query);
-        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-
-        if ($stmt->execute) {
-            return ['status' => 'success'];
-        } else {
-            return ['status' => 'failed'];
-        }
+        return $row ?: ['status' => 'failed'];
     }
-}
 
+    public function deleteUser($id) {
+        $pdo = $this->connect();
+        $table = ($this->status === 'admin') ? 'admin_tb' : 'user_tb';
+        $stmt = $pdo->prepare("DELETE FROM $table WHERE id = :id LIMIT 1");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        return $stmt->execute() ? ['status' => 'success'] : ['status' => 'failed'];
+    }
 }
